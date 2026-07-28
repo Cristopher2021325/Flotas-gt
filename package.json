@@ -10,9 +10,9 @@
     "api": "ts-node-dev --respawn --transpile-only src/index.ts api"
   },
   "dependencies": {
+    "dotenv": "^16.4.5",
     "express": "^4.19.2",
-    "mysql2": "^3.11.0",
-    "dotenv": "^16.4.5"
+    "mysql2": "^3.11.0"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
