@@ -1,0 +1,14 @@
+[
+  {
+    "id": "1",
+    "empresaId": "1",
+    "nombreCompleto": "Carlos Ramirez Lopez",
+    "licenciaTipo": "E",
+    "licenciaNumero": "GT-LIC-001",
+    "licenciaVencimiento": "2027-05-10",
+    "horasManejoHoy": 3,
+    "horasDescansoAcumuladas": 8,
+    "estado": "disponible",
+    "telefono": "50211112222"
+  }
+]
