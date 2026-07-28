@@ -43,6 +43,29 @@ router.post("/empresas", async (req: Request, res: Response) => {
 });
 
 
+router.put("/empresas/:id", async (req: Request, res: Response) => {
+  try {
+    await empresaService.actualizarDatosEmpresa(req.params.id, req.body);
+    const actualizada = await empresaService.obtenerEmpresaPorId(req.params.id);
+    res.json(actualizada);
+  } catch (error) {
+    const mensaje = error instanceof Error ? error.message : "error inesperado";
+    res.status(400).json({ error: mensaje });
+  }
+});
+
+
+router.delete("/empresas/:id", async (req: Request, res: Response) => {
+  try {
+    await empresaService.eliminarEmpresaDefinitivo(req.params.id);
+    res.status(204).send();
+  } catch (error) {
+    const mensaje = error instanceof Error ? error.message : "error inesperado";
+    res.status(404).json({ error: mensaje });
+  }
+});
+
+
 router.get("/rutas", async (_req: Request, res: Response) => {
   try {
     const rutas = await rutaService.obtenerRutas();
