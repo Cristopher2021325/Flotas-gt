@@ -29,14 +29,14 @@ export async function menuEmpresas(): Promise<void> {
     try {
       switch (opcion) {
         case "1": {
-          const empresas = empresaService.obtenerEmpresas();
+          const empresas = await empresaService.obtenerEmpresas();
           console.log(`\nse encontraron ${empresas.length} empresa(s):`);
           empresas.forEach(mostrarEmpresa);
           break;
         }
 
         case "2": {
-          const activas = empresaService.obtenerEmpresasActivas();
+          const activas = await empresaService.obtenerEmpresasActivas();
           console.log(`\nempresas activas (${activas.length}):`);
           activas.forEach(mostrarEmpresa);
           break;
@@ -44,7 +44,7 @@ export async function menuEmpresas(): Promise<void> {
 
         case "3": {
           const id = await preguntar("ingresa el id de la empresa: ");
-          const encontrada = empresaService.obtenerEmpresaPorId(id);
+          const encontrada = await empresaService.obtenerEmpresaPorId(id);
           console.log("\nempresa encontrada:");
           mostrarEmpresa(encontrada);
           break;
@@ -57,7 +57,7 @@ export async function menuEmpresas(): Promise<void> {
           const telefono = await preguntar("telefono: ");
           const email = await preguntar("email: ");
 
-          const nueva = empresaService.crearEmpresa({ nombre, nit, licenciaOperacion, telefono, email });
+          const nueva = await empresaService.crearEmpresa({ nombre, nit, licenciaOperacion, telefono, email });
           console.log("\nempresa registrada con exito:");
           mostrarEmpresa(nueva);
           break;
@@ -72,21 +72,21 @@ export async function menuEmpresas(): Promise<void> {
           if (telefono) datos.telefono = telefono;
           if (email) datos.email = email;
 
-          empresaService.actualizarDatosEmpresa(id, datos);
+          await empresaService.actualizarDatosEmpresa(id, datos);
           console.log("\nempresa actualizada correctamente.");
           break;
         }
 
         case "6": {
           const id = await preguntar("id de la empresa a desactivar: ");
-          empresaService.desactivarEmpresa(id);
+          await empresaService.desactivarEmpresa(id);
           console.log("\nempresa desactivada correctamente.");
           break;
         }
 
         case "7": {
           const id = await preguntar("id de la empresa a eliminar: ");
-          empresaService.eliminarEmpresaDefinitivo(id);
+          await empresaService.eliminarEmpresaDefinitivo(id);
           console.log("\nempresa eliminada correctamente.");
           break;
         }

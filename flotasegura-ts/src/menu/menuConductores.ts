@@ -28,7 +28,7 @@ export async function menuConductores(): Promise<void> {
     try {
       switch (opcion) {
         case "1": {
-          const conductores = conductorService.obtenerConductores();
+          const conductores = await conductorService.obtenerConductores();
           console.log(`\nse encontraron ${conductores.length} conductor(es):`);
           conductores.forEach(mostrarConductor);
           break;
@@ -36,7 +36,7 @@ export async function menuConductores(): Promise<void> {
 
         case "2": {
           const id = await preguntar("id del conductor: ");
-          const encontrado = conductorService.obtenerConductorPorId(id);
+          const encontrado = await conductorService.obtenerConductorPorId(id);
           console.log("\nconductor encontrado:");
           mostrarConductor(encontrado);
           break;
@@ -50,7 +50,7 @@ export async function menuConductores(): Promise<void> {
           const licenciaVencimiento = await preguntar("vencimiento de licencia (aaaa-mm-dd): ");
           const telefono = await preguntar("telefono: ");
 
-          const nuevo = conductorService.crearConductor({
+          const nuevo = await conductorService.crearConductor({
             empresaId, nombreCompleto, licenciaTipo, licenciaNumero, licenciaVencimiento, telefono,
           });
           console.log("\nconductor registrado con exito:");
@@ -67,7 +67,7 @@ export async function menuConductores(): Promise<void> {
           if (horasManejoHoy) datos.horasManejoHoy = Number(horasManejoHoy);
           if (horasDescansoAcumuladas) datos.horasDescansoAcumuladas = Number(horasDescansoAcumuladas);
 
-          conductorService.actualizarConductor(id, datos);
+          await conductorService.actualizarConductor(id, datos);
           console.log("\nconductor actualizado correctamente.");
           break;
         }
@@ -75,14 +75,14 @@ export async function menuConductores(): Promise<void> {
         case "5": {
           const id = await preguntar("id del conductor: ");
           const nuevoEstado = await preguntar("nuevo estado (disponible, en_ruta, descansando, inactivo): ");
-          conductorService.actualizarConductor(id, { estado: nuevoEstado as conductor["estado"] });
+          await conductorService.actualizarConductor(id, { estado: nuevoEstado as conductor["estado"] });
           console.log("\nestado actualizado correctamente.");
           break;
         }
 
         case "6": {
           const id = await preguntar("id del conductor a eliminar: ");
-          conductorService.eliminarConductor(id);
+          await conductorService.eliminarConductor(id);
           console.log("\nconductor eliminado correctamente.");
           break;
         }

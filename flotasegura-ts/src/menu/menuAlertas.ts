@@ -26,14 +26,14 @@ export async function menuAlertas(): Promise<void> {
     try {
       switch (opcion) {
         case "1": {
-          const alertas = alertaService.obtenerAlertas();
+          const alertas = await alertaService.obtenerAlertas();
           console.log(`\nse encontraron ${alertas.length} alerta(s):`);
           alertas.forEach(mostrarAlerta);
           break;
         }
 
         case "2": {
-          const pendientes = alertaService.obtenerAlertasPendientes();
+          const pendientes = await alertaService.obtenerAlertasPendientes();
           console.log(`\nalertas pendientes (${pendientes.length}):`);
           pendientes.forEach(mostrarAlerta);
           break;
@@ -48,7 +48,7 @@ export async function menuAlertas(): Promise<void> {
           const mensaje = await preguntar("mensaje de la alerta: ");
           const horasSinDescanso = Number(await preguntar("horas sin descanso: "));
 
-          const nueva = alertaService.generarAlerta({
+          const nueva = await alertaService.generarAlerta({
             viajeId, conductorId, tipoAlerta: tipoAlerta as alertaFatiga["tipoAlerta"], mensaje, horasSinDescanso,
           });
           console.log("\nalerta generada correctamente:");
@@ -58,7 +58,7 @@ export async function menuAlertas(): Promise<void> {
 
         case "4": {
           const id = await preguntar("id de la alerta a atender: ");
-          alertaService.atenderAlerta(id);
+          await alertaService.atenderAlerta(id);
           console.log("\nalerta marcada como atendida.");
           break;
         }

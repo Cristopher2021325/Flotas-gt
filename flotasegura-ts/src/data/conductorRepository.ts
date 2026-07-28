@@ -1,48 +1,79 @@
-import path from "path";
+import { RowDataPacket, ResultSetHeader } from "mysql2";
+import { pool } from "../config/db";
 import { conductor } from "../models/conductor";
-import { leerArchivo, guardarArchivo, generarId } from "../utils/archivoJson";
+import { generarId } from "../utils/archivoJson";
 
-const rutaArchivo = path.join(__dirname, "conductores.json");
-
-export function leerConductores(): conductor[] {
-  return leerArchivo<conductor>(rutaArchivo);
+interface conductorRow extends RowDataPacket {
+  id: string;
+  empresa_id: string;
+  nombre_completo: string;
+  licencia_tipo: string;
+  licencia_numero: string;
+  licencia_vencimiento: string;
+  horas_manejo_hoy: string | number;
+  horas_descanso_acumuladas: string | number;
+  estado: conductor["estado"];
+  telefono: string;
 }
 
-export function guardarConductores(datos: conductor[]): void {
-  guardarArchivo<conductor>(rutaArchivo, datos);
+function mapear(fila: conductorRow): conductor {
+  return {
+    id: fila.id,
+    empresaId: fila.empresa_id,
+    nombreCompleto: fila.nombre_completo,
+    licenciaTipo: fila.licencia_tipo,
+    licenciaNumero: fila.licencia_numero,
+    licenciaVencimiento: fila.licencia_vencimiento,
+    horasManejoHoy: Number(fila.horas_manejo_hoy),
+    horasDescansoAcumuladas: Number(fila.horas_descanso_acumuladas),
+    estado: fila.estado,
+    telefono: fila.telefono,
+  };
 }
 
-export function buscarPorId(id: string): conductor | undefined {
-  return leerConductores().find((c) => c.id === id);
+export async function leerConductores(): Promise<conductor[]> {
+  const [filas] = await pool.query<conductorRow[]>("SELECT * FROM conductor ORDER BY nombre_completo");
+  return filas.map(mapear);
 }
 
-export function buscarPorLicencia(licenciaNumero: string): conductor | undefined {
-  return leerConductores().find((c) => c.licenciaNumero === licenciaNumero);
+export async function buscarPorId(id: string): Promise<conductor | undefined> {
+  const [filas] = await pool.query<conductorRow[]>("SELECT * FROM conductor WHERE id = ?", [id]);
+  return filas[0] ? mapear(filas[0]) : undefined;
 }
 
-export function agregarConductor(datos: Omit<conductor, "id" | "estado" | "horasManejoHoy" | "horasDescansoAcumuladas">): conductor {
-  const conductores = leerConductores();
+export async function buscarPorLicencia(licenciaNumero: string): Promise<conductor | undefined> {
+  const [filas] = await pool.query<conductorRow[]>("SELECT * FROM conductor WHERE licencia_numero = ?", [licenciaNumero]);
+  return filas[0] ? mapear(filas[0]) : undefined;
+}
+
+export async function agregarConductor(
+  datos: Omit<conductor, "id" | "estado" | "horasManejoHoy" | "horasDescansoAcumuladas">
+): Promise<conductor> {
   const nuevo: conductor = { id: generarId(), estado: "disponible", horasManejoHoy: 0, horasDescansoAcumuladas: 0, ...datos };
-  conductores.push(nuevo);
-  guardarConductores(conductores);
+  await pool.query(
+    `INSERT INTO conductor (id, empresa_id, nombre_completo, licencia_tipo, licencia_numero, licencia_vencimiento,
+     horas_manejo_hoy, horas_descanso_acumuladas, estado, telefono) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      nuevo.id, nuevo.empresaId, nuevo.nombreCompleto, nuevo.licenciaTipo, nuevo.licenciaNumero,
+      nuevo.licenciaVencimiento, nuevo.horasManejoHoy, nuevo.horasDescansoAcumuladas, nuevo.estado, nuevo.telefono,
+    ]
+  );
   return nuevo;
 }
 
-export function actualizarConductor(id: string, datos: Partial<conductor>): boolean {
-  const conductores = leerConductores();
-  const indice = conductores.findIndex((c) => c.id === id);
-  if (indice === -1) return false;
-
-  conductores[indice] = { ...conductores[indice], ...datos };
-  guardarConductores(conductores);
-  return true;
+export async function actualizarConductor(id: string, datos: Partial<conductor>): Promise<boolean> {
+  const actual = await buscarPorId(id);
+  if (!actual) return false;
+  const a = { ...actual, ...datos };
+  const [resultado] = await pool.query<ResultSetHeader>(
+    `UPDATE conductor SET empresa_id = ?, nombre_completo = ?, licencia_tipo = ?, licencia_numero = ?,
+     licencia_vencimiento = ?, horas_manejo_hoy = ?, horas_descanso_acumuladas = ?, estado = ?, telefono = ? WHERE id = ?`,
+    [a.empresaId, a.nombreCompleto, a.licenciaTipo, a.licenciaNumero, a.licenciaVencimiento, a.horasManejoHoy, a.horasDescansoAcumuladas, a.estado, a.telefono, id]
+  );
+  return resultado.affectedRows > 0;
 }
 
-export function eliminarConductor(id: string): boolean {
-  const conductores = leerConductores();
-  const filtrados = conductores.filter((c) => c.id !== id);
-  if (filtrados.length === conductores.length) return false;
-
-  guardarConductores(filtrados);
-  return true;
+export async function eliminarConductor(id: string): Promise<boolean> {
+  const [resultado] = await pool.query<ResultSetHeader>("DELETE FROM conductor WHERE id = ?", [id]);
+  return resultado.affectedRows > 0;
 }

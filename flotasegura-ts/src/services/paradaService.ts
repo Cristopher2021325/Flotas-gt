@@ -2,37 +2,37 @@ import { puntoParada } from "../models/puntoParada";
 import * as paradaRepository from "../data/paradaRepository";
 import * as rutaService from "./rutaService";
 
-export function obtenerParadas(): puntoParada[] {
+export async function obtenerParadas(): Promise<puntoParada[]> {
   return paradaRepository.leerParadas();
 }
 
-export function obtenerParadasDeRuta(rutaId: string): puntoParada[] {
-  rutaService.obtenerRutaPorId(rutaId); 
+export async function obtenerParadasDeRuta(rutaId: string): Promise<puntoParada[]> {
+  await rutaService.obtenerRutaPorId(rutaId);
   return paradaRepository.buscarPorRuta(rutaId);
 }
 
-export function obtenerParadaPorId(id: string): puntoParada {
+export async function obtenerParadaPorId(id: string): Promise<puntoParada> {
   if (!id) throw new Error("debes indicar un id");
 
-  const encontrada = paradaRepository.buscarPorId(id);
+  const encontrada = await paradaRepository.buscarPorId(id);
   if (!encontrada) throw new Error(`no se encontro una parada con el id "${id}"`);
 
   return encontrada;
 }
 
-export function crearParada(datos: Omit<puntoParada, "id">): puntoParada {
+export async function crearParada(datos: Omit<puntoParada, "id">): Promise<puntoParada> {
   if (!datos.nombre || !datos.rutaId) {
     throw new Error("nombre y ruta son obligatorios");
   }
 
-  rutaService.obtenerRutaPorId(datos.rutaId);
+  await rutaService.obtenerRutaPorId(datos.rutaId);
 
   return paradaRepository.agregarParada(datos);
 }
 
-export function eliminarParada(id: string): void {
-  obtenerParadaPorId(id);
+export async function eliminarParada(id: string): Promise<void> {
+  await obtenerParadaPorId(id);
 
-  const elimino = paradaRepository.eliminarParada(id);
+  const elimino = await paradaRepository.eliminarParada(id);
   if (!elimino) throw new Error("no se pudo eliminar la parada");
 }

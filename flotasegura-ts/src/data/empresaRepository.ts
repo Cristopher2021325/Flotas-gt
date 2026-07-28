@@ -1,48 +1,77 @@
-import path from "path";
+import { RowDataPacket, ResultSetHeader } from "mysql2";
+import { pool } from "../config/db";
 import { empresa } from "../models/empresa";
-import { leerArchivo, guardarArchivo, generarId } from "../utils/archivoJson";
+import { generarId } from "../utils/archivoJson";
 
-const rutaArchivo = path.join(__dirname, "empresas.json");
-
-export function leerEmpresas(): empresa[] {
-  return leerArchivo<empresa>(rutaArchivo);
+interface empresaRow extends RowDataPacket {
+  id: string;
+  nombre: string;
+  nit: string;
+  licencia_operacion: string;
+  telefono: string;
+  email: string;
+  estado: "activa" | "inactiva";
 }
 
-export function guardarEmpresas(empresas: empresa[]): void {
-  guardarArchivo<empresa>(rutaArchivo, empresas);
+function mapearEmpresa(fila: empresaRow): empresa {
+  return {
+    id: fila.id,
+    nombre: fila.nombre,
+    nit: fila.nit,
+    licenciaOperacion: fila.licencia_operacion,
+    telefono: fila.telefono,
+    email: fila.email,
+    estado: fila.estado,
+  };
 }
 
-export function buscarPorId(id: string): empresa | undefined {
-  return leerEmpresas().find((e) => e.id === id);
+export async function leerEmpresas(): Promise<empresa[]> {
+  const [filas] = await pool.query<empresaRow[]>("SELECT * FROM empresa ORDER BY nombre");
+  return filas.map(mapearEmpresa);
 }
 
-export function buscarPorNit(nit: string): empresa | undefined {
-  return leerEmpresas().find((e) => e.nit === nit);
+export async function buscarPorId(id: string): Promise<empresa | undefined> {
+  const [filas] = await pool.query<empresaRow[]>("SELECT * FROM empresa WHERE id = ?", [id]);
+  return filas[0] ? mapearEmpresa(filas[0]) : undefined;
 }
 
-export function agregarEmpresa(datos: Omit<empresa, "id" | "estado">): empresa {
-  const empresas = leerEmpresas();
+export async function buscarPorNit(nit: string): Promise<empresa | undefined> {
+  const [filas] = await pool.query<empresaRow[]>("SELECT * FROM empresa WHERE nit = ?", [nit]);
+  return filas[0] ? mapearEmpresa(filas[0]) : undefined;
+}
+
+export async function agregarEmpresa(datos: Omit<empresa, "id" | "estado">): Promise<empresa> {
   const nueva: empresa = { id: generarId(), estado: "activa", ...datos };
-  empresas.push(nueva);
-  guardarEmpresas(empresas);
+  await pool.query(
+    `INSERT INTO empresa (id, nombre, nit, licencia_operacion, telefono, email, estado)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [nueva.id, nueva.nombre, nueva.nit, nueva.licenciaOperacion, nueva.telefono, nueva.email, nueva.estado]
+  );
   return nueva;
 }
 
-export function actualizarEmpresa(id: string, datos: Partial<empresa>): boolean {
-  const empresas = leerEmpresas();
-  const indice = empresas.findIndex((e) => e.id === id);
-  if (indice === -1) return false;
+export async function actualizarEmpresa(id: string, datos: Partial<empresa>): Promise<boolean> {
+  const actual = await buscarPorId(id);
+  if (!actual) return false;
 
-  empresas[indice] = { ...empresas[indice], ...datos };
-  guardarEmpresas(empresas);
-  return true;
+  const actualizado = { ...actual, ...datos };
+  const [resultado] = await pool.query<ResultSetHeader>(
+    `UPDATE empresa SET nombre = ?, nit = ?, licencia_operacion = ?, telefono = ?, email = ?, estado = ?
+     WHERE id = ?`,
+    [
+      actualizado.nombre,
+      actualizado.nit,
+      actualizado.licenciaOperacion,
+      actualizado.telefono,
+      actualizado.email,
+      actualizado.estado,
+      id,
+    ]
+  );
+  return resultado.affectedRows > 0;
 }
 
-export function eliminarEmpresa(id: string): boolean {
-  const empresas = leerEmpresas();
-  const filtradas = empresas.filter((e) => e.id !== id);
-  if (filtradas.length === empresas.length) return false;
-
-  guardarEmpresas(filtradas);
-  return true;
+export async function eliminarEmpresa(id: string): Promise<boolean> {
+  const [resultado] = await pool.query<ResultSetHeader>("DELETE FROM empresa WHERE id = ?", [id]);
+  return resultado.affectedRows > 0;
 }

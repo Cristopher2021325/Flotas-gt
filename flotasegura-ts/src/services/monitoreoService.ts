@@ -2,15 +2,15 @@ import { monitoreo } from "../models/monitoreo";
 import * as monitoreoRepository from "../data/monitoreoRepository";
 import * as viajeService from "./viajeService";
 
-export function obtenerMonitoreosDeViaje(viajeId: string): monitoreo[] {
-  viajeService.obtenerViajePorId(viajeId); 
+export async function obtenerMonitoreosDeViaje(viajeId: string): Promise<monitoreo[]> {
+  await viajeService.obtenerViajePorId(viajeId);
   return monitoreoRepository.buscarPorViaje(viajeId);
 }
 
-export function registrarMonitoreo(datos: Omit<monitoreo, "id" | "registradoEn">): monitoreo {
+export async function registrarMonitoreo(datos: Omit<monitoreo, "id" | "registradoEn">): Promise<monitoreo> {
   if (!datos.viajeId) throw new Error("el viaje es obligatorio");
 
-  viajeService.obtenerViajePorId(datos.viajeId);
+  await viajeService.obtenerViajePorId(datos.viajeId);
 
   return monitoreoRepository.agregarMonitoreo(datos);
 }

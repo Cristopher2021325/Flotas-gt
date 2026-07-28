@@ -24,7 +24,7 @@ export async function menuMonitoreo(): Promise<void> {
       switch (opcion) {
         case "1": {
           const viajeId = await preguntar("id del viaje: ");
-          const registros = monitoreoService.obtenerMonitoreosDeViaje(viajeId);
+          const registros = await monitoreoService.obtenerMonitoreosDeViaje(viajeId);
           console.log(`\nse encontraron ${registros.length} registro(s):`);
           registros.forEach(mostrarMonitoreo);
           break;
@@ -38,7 +38,7 @@ export async function menuMonitoreo(): Promise<void> {
           const horasConduccionContinua = Number(await preguntar("horas de conduccion continua: "));
           const estadoConductor = await preguntar("estado del conductor (activo, alerta_fatiga, detenido, descanso): ");
 
-          monitoreoService.registrarMonitoreo({
+          await monitoreoService.registrarMonitoreo({
             viajeId, latitud, longitud, velocidadKmh, horasConduccionContinua,
             estadoConductor: estadoConductor as monitoreo["estadoConductor"],
           });

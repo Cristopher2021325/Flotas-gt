@@ -30,7 +30,7 @@ export async function menuRutas(): Promise<void> {
     try {
       switch (opcion) {
         case "1": {
-          const rutas = rutaService.obtenerRutas();
+          const rutas = await rutaService.obtenerRutas();
           console.log(`\nse encontraron ${rutas.length} ruta(s):`);
           rutas.forEach(mostrarRuta);
           break;
@@ -38,7 +38,7 @@ export async function menuRutas(): Promise<void> {
 
         case "2": {
           const id = await preguntar("id de la ruta: ");
-          const encontrada = rutaService.obtenerRutaPorId(id);
+          const encontrada = await rutaService.obtenerRutaPorId(id);
           console.log("\nruta encontrada:");
           mostrarRuta(encontrada);
           break;
@@ -52,7 +52,7 @@ export async function menuRutas(): Promise<void> {
           const tiempoEstimadoMin = Number(await preguntar("tiempo estimado en minutos: "));
           const nivelRiesgo = await preguntar("nivel de riesgo (bajo, medio, alto, critico): ");
 
-          const nueva = rutaService.crearRuta({
+          const nueva = await rutaService.crearRuta({
             nombre, origenDescripcion, destinoDescripcion, distanciaKm, tiempoEstimadoMin,
             nivelRiesgo: nivelRiesgo as ruta["nivelRiesgo"],
           });
@@ -63,7 +63,7 @@ export async function menuRutas(): Promise<void> {
 
         case "4": {
           const rutaId = await preguntar("id de la ruta: ");
-          const paradas = paradaService.obtenerParadasDeRuta(rutaId);
+          const paradas = await paradaService.obtenerParadasDeRuta(rutaId);
           console.log(`\nla ruta tiene ${paradas.length} parada(s):`);
           paradas.forEach((p) => {
             console.log(`orden ${p.orden} | ${p.nombre} (${p.tipo}) | obligatoria: ${p.obligatorio ? "si" : "no"}`);
@@ -79,7 +79,7 @@ export async function menuRutas(): Promise<void> {
           const orden = Number(await preguntar("orden dentro de la ruta: "));
           const obligatorioTexto = await preguntar("es obligatoria? (si/no): ");
 
-          paradaService.crearParada({
+          await paradaService.crearParada({
             rutaId, nombre, tipo: tipo as puntoParada["tipo"], tiempoDescansoMin, orden,
             obligatorio: obligatorioTexto.toLowerCase() === "si",
           });
@@ -89,7 +89,7 @@ export async function menuRutas(): Promise<void> {
 
         case "6": {
           const id = await preguntar("id de la ruta a eliminar: ");
-          rutaService.eliminarRuta(id);
+          await rutaService.eliminarRuta(id);
           console.log("\nruta eliminada correctamente.");
           break;
         }

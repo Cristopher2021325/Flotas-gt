@@ -1,44 +1,67 @@
-import path from "path";
+import { RowDataPacket, ResultSetHeader } from "mysql2";
+import { pool } from "../config/db";
 import { carga } from "../models/carga";
-import { leerArchivo, guardarArchivo, generarId } from "../utils/archivoJson";
+import { generarId } from "../utils/archivoJson";
 
-const rutaArchivo = path.join(__dirname, "cargas.json");
-
-export function leerCargas(): carga[] {
-  return leerArchivo<carga>(rutaArchivo);
+interface cargaRow extends RowDataPacket {
+  id: string;
+  empresa_id: string;
+  descripcion: string;
+  peso_kg: string | number;
+  tipo_carga: string;
+  requiere_refrigeracion: number;
+  origen_direccion: string;
+  destino_direccion: string;
+  estado: carga["estado"];
 }
 
-export function guardarCargas(datos: carga[]): void {
-  guardarArchivo<carga>(rutaArchivo, datos);
+function mapear(fila: cargaRow): carga {
+  return {
+    id: fila.id,
+    empresaId: fila.empresa_id,
+    descripcion: fila.descripcion,
+    pesoKg: Number(fila.peso_kg),
+    tipoCarga: fila.tipo_carga,
+    requiereRefrigeracion: !!fila.requiere_refrigeracion,
+    origenDireccion: fila.origen_direccion,
+    destinoDireccion: fila.destino_direccion,
+    estado: fila.estado,
+  };
 }
 
-export function buscarPorId(id: string): carga | undefined {
-  return leerCargas().find((c) => c.id === id);
+export async function leerCargas(): Promise<carga[]> {
+  const [filas] = await pool.query<cargaRow[]>("SELECT * FROM carga ORDER BY id");
+  return filas.map(mapear);
 }
 
-export function agregarCarga(datos: Omit<carga, "id" | "estado">): carga {
-  const cargas = leerCargas();
+export async function buscarPorId(id: string): Promise<carga | undefined> {
+  const [filas] = await pool.query<cargaRow[]>("SELECT * FROM carga WHERE id = ?", [id]);
+  return filas[0] ? mapear(filas[0]) : undefined;
+}
+
+export async function agregarCarga(datos: Omit<carga, "id" | "estado">): Promise<carga> {
   const nueva: carga = { id: generarId(), estado: "pendiente", ...datos };
-  cargas.push(nueva);
-  guardarCargas(cargas);
+  await pool.query(
+    `INSERT INTO carga (id, empresa_id, descripcion, peso_kg, tipo_carga, requiere_refrigeracion, origen_direccion, destino_direccion, estado)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [nueva.id, nueva.empresaId, nueva.descripcion, nueva.pesoKg, nueva.tipoCarga, nueva.requiereRefrigeracion ? 1 : 0, nueva.origenDireccion, nueva.destinoDireccion, nueva.estado]
+  );
   return nueva;
 }
 
-export function actualizarCarga(id: string, datos: Partial<carga>): boolean {
-  const cargas = leerCargas();
-  const indice = cargas.findIndex((c) => c.id === id);
-  if (indice === -1) return false;
-
-  cargas[indice] = { ...cargas[indice], ...datos };
-  guardarCargas(cargas);
-  return true;
+export async function actualizarCarga(id: string, datos: Partial<carga>): Promise<boolean> {
+  const actual = await buscarPorId(id);
+  if (!actual) return false;
+  const a = { ...actual, ...datos };
+  const [resultado] = await pool.query<ResultSetHeader>(
+    `UPDATE carga SET empresa_id = ?, descripcion = ?, peso_kg = ?, tipo_carga = ?, requiere_refrigeracion = ?,
+     origen_direccion = ?, destino_direccion = ?, estado = ? WHERE id = ?`,
+    [a.empresaId, a.descripcion, a.pesoKg, a.tipoCarga, a.requiereRefrigeracion ? 1 : 0, a.origenDireccion, a.destinoDireccion, a.estado, id]
+  );
+  return resultado.affectedRows > 0;
 }
 
-export function eliminarCarga(id: string): boolean {
-  const cargas = leerCargas();
-  const filtradas = cargas.filter((c) => c.id !== id);
-  if (filtradas.length === cargas.length) return false;
-
-  guardarCargas(filtradas);
-  return true;
+export async function eliminarCarga(id: string): Promise<boolean> {
+  const [resultado] = await pool.query<ResultSetHeader>("DELETE FROM carga WHERE id = ?", [id]);
+  return resultado.affectedRows > 0;
 }

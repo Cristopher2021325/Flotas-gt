@@ -25,7 +25,7 @@ export async function menuIncidentes(): Promise<void> {
     try {
       switch (opcion) {
         case "1": {
-          const incidentes = incidenteService.obtenerIncidentes();
+          const incidentes = await incidenteService.obtenerIncidentes();
           console.log(`\nse encontraron ${incidentes.length} incidente(s):`);
           incidentes.forEach(mostrarIncidente);
           break;
@@ -33,7 +33,7 @@ export async function menuIncidentes(): Promise<void> {
 
         case "2": {
           const id = await preguntar("id del incidente: ");
-          const encontrado = incidenteService.obtenerIncidentePorId(id);
+          const encontrado = await incidenteService.obtenerIncidentePorId(id);
           console.log("\nincidente encontrado:");
           mostrarIncidente(encontrado);
           break;
@@ -48,7 +48,7 @@ export async function menuIncidentes(): Promise<void> {
           const severidad = await preguntar("severidad (leve, moderado, grave, fatal): ");
           const reportadoTexto = await preguntar("se reporto a las autoridades? (si/no): ");
 
-          const nuevo = incidenteService.reportarIncidente({
+          const nuevo = await incidenteService.reportarIncidente({
             viajeId, conductorId, vehiculoId,
             tipo: tipo as incidente["tipo"],
             descripcion,

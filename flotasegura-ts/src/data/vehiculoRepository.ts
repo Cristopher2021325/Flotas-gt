@@ -1,48 +1,103 @@
-import path from "path";
+import { RowDataPacket, ResultSetHeader } from "mysql2";
+import { pool } from "../config/db";
 import { vehiculo } from "../models/vehiculo";
-import { leerArchivo, guardarArchivo, generarId } from "../utils/archivoJson";
+import { generarId } from "../utils/archivoJson";
 
-const rutaArchivo = path.join(__dirname, "vehiculos.json");
-
-export function leerVehiculos(): vehiculo[] {
-  return leerArchivo<vehiculo>(rutaArchivo);
+interface vehiculoRow extends RowDataPacket {
+  id: string;
+  empresa_id: string;
+  placa: string;
+  tipo: string;
+  marca: string;
+  modelo: string;
+  anio: number;
+  tonelaje_maximo: string | number;
+  peso_actual_carga: string | number;
+  estado: vehiculo["estado"];
+  ultimo_mantenimiento: string | null;
 }
 
-export function guardarVehiculos(datos: vehiculo[]): void {
-  guardarArchivo<vehiculo>(rutaArchivo, datos);
+function mapearVehiculo(fila: vehiculoRow): vehiculo {
+  return {
+    id: fila.id,
+    empresaId: fila.empresa_id,
+    placa: fila.placa,
+    tipo: fila.tipo,
+    marca: fila.marca,
+    modelo: fila.modelo,
+    anio: fila.anio,
+    tonelajeMaximo: Number(fila.tonelaje_maximo),
+    pesoActualCarga: Number(fila.peso_actual_carga),
+    estado: fila.estado,
+    ultimoMantenimiento: fila.ultimo_mantenimiento,
+  };
 }
 
-export function buscarPorId(id: string): vehiculo | undefined {
-  return leerVehiculos().find((v) => v.id === id);
+export async function leerVehiculos(): Promise<vehiculo[]> {
+  const [filas] = await pool.query<vehiculoRow[]>("SELECT * FROM vehiculo ORDER BY placa");
+  return filas.map(mapearVehiculo);
 }
 
-export function buscarPorPlaca(placa: string): vehiculo | undefined {
-  return leerVehiculos().find((v) => v.placa === placa);
+export async function buscarPorId(id: string): Promise<vehiculo | undefined> {
+  const [filas] = await pool.query<vehiculoRow[]>("SELECT * FROM vehiculo WHERE id = ?", [id]);
+  return filas[0] ? mapearVehiculo(filas[0]) : undefined;
 }
 
-export function agregarVehiculo(datos: Omit<vehiculo, "id" | "estado" | "pesoActualCarga">): vehiculo {
-  const vehiculos = leerVehiculos();
+export async function buscarPorPlaca(placa: string): Promise<vehiculo | undefined> {
+  const [filas] = await pool.query<vehiculoRow[]>("SELECT * FROM vehiculo WHERE placa = ?", [placa]);
+  return filas[0] ? mapearVehiculo(filas[0]) : undefined;
+}
+
+export async function agregarVehiculo(
+  datos: Omit<vehiculo, "id" | "estado" | "pesoActualCarga">
+): Promise<vehiculo> {
   const nuevo: vehiculo = { id: generarId(), estado: "disponible", pesoActualCarga: 0, ...datos };
-  vehiculos.push(nuevo);
-  guardarVehiculos(vehiculos);
+  await pool.query(
+    `INSERT INTO vehiculo (id, empresa_id, placa, tipo, marca, modelo, anio, tonelaje_maximo, peso_actual_carga, estado, ultimo_mantenimiento)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      nuevo.id,
+      nuevo.empresaId,
+      nuevo.placa,
+      nuevo.tipo,
+      nuevo.marca,
+      nuevo.modelo,
+      nuevo.anio,
+      nuevo.tonelajeMaximo,
+      nuevo.pesoActualCarga,
+      nuevo.estado,
+      nuevo.ultimoMantenimiento,
+    ]
+  );
   return nuevo;
 }
 
-export function actualizarVehiculo(id: string, datos: Partial<vehiculo>): boolean {
-  const vehiculos = leerVehiculos();
-  const indice = vehiculos.findIndex((v) => v.id === id);
-  if (indice === -1) return false;
+export async function actualizarVehiculo(id: string, datos: Partial<vehiculo>): Promise<boolean> {
+  const actual = await buscarPorId(id);
+  if (!actual) return false;
 
-  vehiculos[indice] = { ...vehiculos[indice], ...datos };
-  guardarVehiculos(vehiculos);
-  return true;
+  const actualizado = { ...actual, ...datos };
+  const [resultado] = await pool.query<ResultSetHeader>(
+    `UPDATE vehiculo SET empresa_id = ?, placa = ?, tipo = ?, marca = ?, modelo = ?, anio = ?,
+     tonelaje_maximo = ?, peso_actual_carga = ?, estado = ?, ultimo_mantenimiento = ? WHERE id = ?`,
+    [
+      actualizado.empresaId,
+      actualizado.placa,
+      actualizado.tipo,
+      actualizado.marca,
+      actualizado.modelo,
+      actualizado.anio,
+      actualizado.tonelajeMaximo,
+      actualizado.pesoActualCarga,
+      actualizado.estado,
+      actualizado.ultimoMantenimiento,
+      id,
+    ]
+  );
+  return resultado.affectedRows > 0;
 }
 
-export function eliminarVehiculo(id: string): boolean {
-  const vehiculos = leerVehiculos();
-  const filtrados = vehiculos.filter((v) => v.id !== id);
-  if (filtrados.length === vehiculos.length) return false;
-
-  guardarVehiculos(filtrados);
-  return true;
+export async function eliminarVehiculo(id: string): Promise<boolean> {
+  const [resultado] = await pool.query<ResultSetHeader>("DELETE FROM vehiculo WHERE id = ?", [id]);
+  return resultado.affectedRows > 0;
 }

@@ -28,7 +28,7 @@ export async function menuVehiculos(): Promise<void> {
     try {
       switch (opcion) {
         case "1": {
-          const vehiculos = vehiculoService.obtenerVehiculos();
+          const vehiculos = await vehiculoService.obtenerVehiculos();
           console.log(`\nse encontraron ${vehiculos.length} vehiculo(s):`);
           vehiculos.forEach(mostrarVehiculo);
           break;
@@ -36,7 +36,7 @@ export async function menuVehiculos(): Promise<void> {
 
         case "2": {
           const id = await preguntar("id del vehiculo: ");
-          const encontrado = vehiculoService.obtenerVehiculoPorId(id);
+          const encontrado = await vehiculoService.obtenerVehiculoPorId(id);
           console.log("\nvehiculo encontrado:");
           mostrarVehiculo(encontrado);
           break;
@@ -51,7 +51,7 @@ export async function menuVehiculos(): Promise<void> {
           const anio = Number(await preguntar("anio: "));
           const tonelajeMaximo = Number(await preguntar("tonelaje maximo: "));
 
-          const nuevo = vehiculoService.crearVehiculo({
+          const nuevo = await vehiculoService.crearVehiculo({
             empresaId, placa, tipo, marca, modelo, anio, tonelajeMaximo, ultimoMantenimiento: null,
           });
           console.log("\nvehiculo registrado con exito:");
@@ -62,21 +62,21 @@ export async function menuVehiculos(): Promise<void> {
         case "4": {
           const id = await preguntar("id del vehiculo: ");
           const nuevoEstado = await preguntar("nuevo estado (disponible, en_ruta, mantenimiento, inactivo): ");
-          vehiculoService.actualizarVehiculo(id, { estado: nuevoEstado as vehiculo["estado"] });
+          await vehiculoService.actualizarVehiculo(id, { estado: nuevoEstado as vehiculo["estado"] });
           console.log("\nestado actualizado correctamente.");
           break;
         }
 
         case "5": {
           const id = await preguntar("id del vehiculo: ");
-          vehiculoService.actualizarVehiculo(id, { ultimoMantenimiento: new Date().toISOString() });
+          await vehiculoService.actualizarVehiculo(id, { ultimoMantenimiento: new Date().toISOString() });
           console.log("\nmantenimiento registrado correctamente.");
           break;
         }
 
         case "6": {
           const id = await preguntar("id del vehiculo a eliminar: ");
-          vehiculoService.eliminarVehiculo(id);
+          await vehiculoService.eliminarVehiculo(id);
           console.log("\nvehiculo eliminado correctamente.");
           break;
         }

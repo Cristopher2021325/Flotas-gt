@@ -27,7 +27,7 @@ export async function menuViajes(): Promise<void> {
     try {
       switch (opcion) {
         case "1": {
-          const viajes = viajeService.obtenerViajes();
+          const viajes = await viajeService.obtenerViajes();
           console.log(`\nse encontraron ${viajes.length} viaje(s):`);
           viajes.forEach(mostrarViaje);
           break;
@@ -35,7 +35,7 @@ export async function menuViajes(): Promise<void> {
 
         case "2": {
           const id = await preguntar("id del viaje: ");
-          const encontrado = viajeService.obtenerViajePorId(id);
+          const encontrado = await viajeService.obtenerViajePorId(id);
           console.log("\nviaje encontrado:");
           mostrarViaje(encontrado);
           break;
@@ -48,7 +48,7 @@ export async function menuViajes(): Promise<void> {
           const cargaIdTexto = await preguntar("id de la carga (dejar vacio si no aplica): ");
           const inicioProgramado = await preguntar("fecha y hora de inicio (aaaa-mm-dd hh:mm): ");
 
-          const nuevo = viajeService.crearViaje({
+          const nuevo = await viajeService.crearViaje({
             conductorId, vehiculoId, rutaId,
             cargaId: cargaIdTexto || null,
             inicioProgramado,
@@ -63,14 +63,14 @@ export async function menuViajes(): Promise<void> {
           const nuevoEstado = await preguntar(
             "nuevo estado (programado, en_curso, pausado, completado, cancelado, accidente): "
           );
-          viajeService.cambiarEstadoViaje(id, nuevoEstado as viaje["estado"]);
+          await viajeService.cambiarEstadoViaje(id, nuevoEstado as viaje["estado"]);
           console.log("\nestado del viaje actualizado correctamente.");
           break;
         }
 
         case "5": {
           const id = await preguntar("id del viaje a eliminar: ");
-          viajeService.eliminarViaje(id);
+          await viajeService.eliminarViaje(id);
           console.log("\nviaje eliminado correctamente.");
           break;
         }

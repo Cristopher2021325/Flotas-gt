@@ -27,7 +27,7 @@ export async function menuCargas(): Promise<void> {
     try {
       switch (opcion) {
         case "1": {
-          const cargas = cargaService.obtenerCargas();
+          const cargas = await cargaService.obtenerCargas();
           console.log(`\nse encontraron ${cargas.length} carga(s):`);
           cargas.forEach(mostrarCarga);
           break;
@@ -35,7 +35,7 @@ export async function menuCargas(): Promise<void> {
 
         case "2": {
           const id = await preguntar("id de la carga: ");
-          const encontrada = cargaService.obtenerCargaPorId(id);
+          const encontrada = await cargaService.obtenerCargaPorId(id);
           console.log("\ncarga encontrada:");
           mostrarCarga(encontrada);
           break;
@@ -50,7 +50,7 @@ export async function menuCargas(): Promise<void> {
           const origenDireccion = await preguntar("direccion de origen: ");
           const destinoDireccion = await preguntar("direccion de destino: ");
 
-          const nueva = cargaService.crearCarga({
+          const nueva = await cargaService.crearCarga({
             empresaId, descripcion, pesoKg, tipoCarga,
             requiereRefrigeracion: requiereRefrigeracionTexto.toLowerCase() === "si",
             origenDireccion, destinoDireccion,
@@ -63,14 +63,14 @@ export async function menuCargas(): Promise<void> {
         case "4": {
           const id = await preguntar("id de la carga: ");
           const nuevoEstado = await preguntar("nuevo estado (pendiente, asignada, en_transito, entregada, cancelada): ");
-          cargaService.actualizarCarga(id, { estado: nuevoEstado as carga["estado"] });
+          await cargaService.actualizarCarga(id, { estado: nuevoEstado as carga["estado"] });
           console.log("\nestado actualizado correctamente.");
           break;
         }
 
         case "5": {
           const id = await preguntar("id de la carga a eliminar: ");
-          cargaService.eliminarCarga(id);
+          await cargaService.eliminarCarga(id);
           console.log("\ncarga eliminada correctamente.");
           break;
         }

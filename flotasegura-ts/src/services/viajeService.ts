@@ -5,52 +5,50 @@ import * as vehiculoService from "./vehiculoService";
 import * as rutaService from "./rutaService";
 import * as cargaService from "./cargaService";
 
-export function obtenerViajes(): viaje[] {
+export async function obtenerViajes(): Promise<viaje[]> {
   return viajeRepository.leerViajes();
 }
 
-export function obtenerViajePorId(id: string): viaje {
+export async function obtenerViajePorId(id: string): Promise<viaje> {
   if (!id) throw new Error("debes indicar un id");
 
-  const encontrado = viajeRepository.buscarPorId(id);
+  const encontrado = await viajeRepository.buscarPorId(id);
   if (!encontrado) throw new Error(`no se encontro un viaje con el id "${id}"`);
 
   return encontrado;
 }
 
-export function crearViaje(
+export async function crearViaje(
   datos: Omit<viaje, "id" | "estado" | "inicioReal" | "finReal" | "notasClaude">
-): viaje {
+): Promise<viaje> {
   if (!datos.conductorId || !datos.vehiculoId || !datos.rutaId || !datos.inicioProgramado) {
     throw new Error("conductor, vehiculo, ruta y fecha de inicio programado son obligatorios");
   }
 
-  
-  conductorService.obtenerConductorPorId(datos.conductorId);
-  vehiculoService.obtenerVehiculoPorId(datos.vehiculoId);
-  rutaService.obtenerRutaPorId(datos.rutaId);
+  await conductorService.obtenerConductorPorId(datos.conductorId);
+  await vehiculoService.obtenerVehiculoPorId(datos.vehiculoId);
+  await rutaService.obtenerRutaPorId(datos.rutaId);
   if (datos.cargaId) {
-    cargaService.obtenerCargaPorId(datos.cargaId);
+    await cargaService.obtenerCargaPorId(datos.cargaId);
   }
 
   return viajeRepository.agregarViaje(datos);
 }
 
-
-export function cambiarEstadoViaje(id: string, nuevoEstado: viaje["estado"]): void {
-  obtenerViajePorId(id);
+export async function cambiarEstadoViaje(id: string, nuevoEstado: viaje["estado"]): Promise<void> {
+  await obtenerViajePorId(id);
 
   const datos: Partial<viaje> = { estado: nuevoEstado };
   if (nuevoEstado === "en_curso") datos.inicioReal = new Date().toISOString();
   if (nuevoEstado === "completado" || nuevoEstado === "cancelado") datos.finReal = new Date().toISOString();
 
-  const actualizo = viajeRepository.actualizarViaje(id, datos);
+  const actualizo = await viajeRepository.actualizarViaje(id, datos);
   if (!actualizo) throw new Error("no se pudo actualizar el viaje");
 }
 
-export function eliminarViaje(id: string): void {
-  obtenerViajePorId(id);
+export async function eliminarViaje(id: string): Promise<void> {
+  await obtenerViajePorId(id);
 
-  const elimino = viajeRepository.eliminarViaje(id);
+  const elimino = await viajeRepository.eliminarViaje(id);
   if (!elimino) throw new Error("no se pudo eliminar el viaje");
 }
