@@ -1,0 +1,12 @@
+[
+  {
+    "id": "1",
+    "nombre": "Ciudad de Guatemala - Puerto Quetzal",
+    "origenDescripcion": "Zona 12, Ciudad de Guatemala",
+    "destinoDescripcion": "Puerto Quetzal, Escuintla",
+    "distanciaKm": 105,
+    "tiempoEstimadoMin": 150,
+    "nivelRiesgo": "medio",
+    "activa": true
+  }
+]
