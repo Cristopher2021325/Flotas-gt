@@ -7,7 +7,7 @@
    "dev": "ts-node-dev --respawn --transpile-only flotasegura-ts/src/index.ts",
     "build": "tsc && node scripts/copy-json.js",
     "start": "node dist/index.js",
-    "api": "ts-node-dev --respawn --transpile-only src/index.ts api"
+   "api": "ts-node-dev --respawn --transpile-only flotasegura-ts/src/index.ts api"
   },
   "dependencies": {
     "dotenv": "^16.4.5",

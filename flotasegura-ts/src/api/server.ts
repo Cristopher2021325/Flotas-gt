@@ -10,6 +10,6 @@ app.use("/api", router);
 
 export function iniciarServidor(): void {
   app.listen(puerto, () => {
-    console.log(`servidor api escuchando en http://localhost:${puerto}/api`);
+    console.log(`Servidor API escuchando en http://localhost:3000/api`);
   });
 }
