@@ -1,0 +1,14 @@
+[
+  {
+    "id": "1",
+    "conductorId": "1",
+    "vehiculoId": "1",
+    "rutaId": "1",
+    "cargaId": "1",
+    "estado": "programado",
+    "inicioProgramado": "2026-07-28 06:00",
+    "inicioReal": null,
+    "finReal": null,
+    "notasClaude": ""
+  }
+]
