@@ -20,7 +20,7 @@ export function crearCarga(datos: Omit<carga, "id" | "estado">): carga {
     throw new Error("descripcion, peso y empresa son obligatorios");
   }
 
-  empresaService.obtenerEmpresaPorId(datos.empresaId); // valida que la empresa exista
+  empresaService.obtenerEmpresaPorId(datos.empresaId);
 
   return cargaRepository.agregarCarga(datos);
 }
