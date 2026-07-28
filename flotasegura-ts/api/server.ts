@@ -1,8 +1,8 @@
 import express from "express";
-import router from ".routes";
 
 const app = express();
 const puerto = 3000;
+const router = express.Router();
 
 app.use(express.json());
 app.use("/api", router);
@@ -13,4 +13,3 @@ export function iniciarServidor(): void {
     console.log(`servidor api escuchando en http://localhost:${puerto}/api`);
   });
 }
-  
