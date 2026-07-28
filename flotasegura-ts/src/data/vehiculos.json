@@ -1,0 +1,15 @@
+[
+  {
+    "id": "1",
+    "empresaId": "1",
+    "placa": "P-123ABC",
+    "tipo": "trailer",
+    "marca": "Freightliner",
+    "modelo": "Cascadia",
+    "anio": 2019,
+    "tonelajeMaximo": 30,
+    "pesoActualCarga": 0,
+    "estado": "disponible",
+    "ultimoMantenimiento": "2026-06-01"
+  }
+]
