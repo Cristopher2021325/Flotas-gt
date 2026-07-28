@@ -1,0 +1,20 @@
+[
+  {
+    "id": "1",
+    "nombre": "Transportes del Atlantico S.A.",
+    "nit": "1234567-8",
+    "licenciaOperacion": "LIC-001",
+    "telefono": "50212345678",
+    "email": "contacto@transatlantico.gt",
+    "estado": "activa"
+  },
+  {
+    "id": "2",
+    "nombre": "Fletes y Cargas del Altiplano",
+    "nit": "9876543-2",
+    "licenciaOperacion": "LIC-002",
+    "telefono": "50287654321",
+    "email": "info@fletesaltiplano.gt",
+    "estado": "activa"
+  }
+]
