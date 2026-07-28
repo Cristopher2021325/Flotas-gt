@@ -1,0 +1,21 @@
+{
+  "name": "flota-gt",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Cristopher2021325/Flotas-gt.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Cristopher2021325/Flotas-gt/issues"
+  },
+  "homepage": "https://github.com/Cristopher2021325/Flotas-gt#readme"
+}
