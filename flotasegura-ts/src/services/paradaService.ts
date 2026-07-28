@@ -7,7 +7,7 @@ export function obtenerParadas(): puntoParada[] {
 }
 
 export function obtenerParadasDeRuta(rutaId: string): puntoParada[] {
-  rutaService.obtenerRutaPorId(rutaId); // valida que la ruta exista
+  rutaService.obtenerRutaPorId(rutaId); 
   return paradaRepository.buscarPorRuta(rutaId);
 }
 
