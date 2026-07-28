@@ -1,0 +1,13 @@
+[
+  {
+    "id": "1",
+    "empresaId": "1",
+    "descripcion": "Materiales de construccion",
+    "pesoKg": 12000,
+    "tipoCarga": "general",
+    "requiereRefrigeracion": false,
+    "origenDireccion": "Zona 12, Ciudad de Guatemala",
+    "destinoDireccion": "Puerto Quetzal, Escuintla",
+    "estado": "pendiente"
+  }
+]
