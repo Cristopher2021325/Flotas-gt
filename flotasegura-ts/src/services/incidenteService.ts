@@ -26,7 +26,6 @@ export function reportarIncidente(datos: Omit<incidente, "id" | "ocurridoEn">): 
   conductorService.obtenerConductorPorId(datos.conductorId);
   vehiculoService.obtenerVehiculoPorId(datos.vehiculoId);
 
-  // si el incidente es grave o fatal, marcamos el viaje como "accidente"
   if (datos.severidad === "grave" || datos.severidad === "fatal") {
     viajeService.cambiarEstadoViaje(datos.viajeId, "accidente");
   }
