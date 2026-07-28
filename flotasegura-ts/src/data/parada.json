@@ -1,0 +1,11 @@
+[
+  {
+    "id": "1",
+    "rutaId": "1",
+    "nombre": "Gasolinera km 45",
+    "tipo": "gasolinera",
+    "tiempoDescansoMin": 15,
+    "orden": 1,
+    "obligatorio": false
+  }
+]
