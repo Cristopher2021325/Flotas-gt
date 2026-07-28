@@ -1,10 +1,16 @@
+import { RowDataPacket, ResultSetHeader } from "mysql2";
+import pool from "../config/db";
 import { monitoreo } from "../models/monitoreo";
-import * as monitoreoRepository from "../data/monitoreoRepository";
 import * as viajeService from "./viajeService";
 
 export async function obtenerMonitoreosDeViaje(viajeId: string): Promise<monitoreo[]> {
   await viajeService.obtenerViajePorId(viajeId);
-  return monitoreoRepository.buscarPorViaje(viajeId);
+
+  const [rows] = await pool.query<RowDataPacket[]>(
+    "SELECT * FROM monitoreos WHERE viajeId = ? ORDER BY registradoEn DESC",
+    [viajeId]
+  );
+  return rows as monitoreo[];
 }
 
 export async function registrarMonitoreo(datos: Omit<monitoreo, "id" | "registradoEn">): Promise<monitoreo> {
@@ -12,5 +18,25 @@ export async function registrarMonitoreo(datos: Omit<monitoreo, "id" | "registra
 
   await viajeService.obtenerViajePorId(datos.viajeId);
 
-  return monitoreoRepository.agregarMonitoreo(datos);
+  const fechaRegistro = new Date().toISOString();
+
+  const [resultado] = await pool.query<ResultSetHeader>(
+    "INSERT INTO monitoreos (viajeId, latitud, longitud, velocidad, registradoEn, comentario) VALUES (?, ?, ?, ?, ?, ?)",
+    [
+      datos.viajeId,
+      datos.latitud || null,
+      datos.longitud || null,
+      datos.velocidadKmh || null,
+      fechaRegistro,
+      ((datos as any).comentario ?? null),
+    ]
+  );
+
+  const nuevoMonitoreo: monitoreo = {
+    id: resultado.insertId.toString(),
+    registradoEn: fechaRegistro,
+    ...datos,
+  };
+
+  return nuevoMonitoreo;
 }

@@ -1,15 +1,17 @@
+import { RowDataPacket, ResultSetHeader } from "mysql2";
+import pool from "../config/db";
 import { empresa } from "../models/empresa";
-import * as empresaRepository from "../data/empresaRepository";
-
 
 export async function obtenerEmpresas(): Promise<empresa[]> {
-  return empresaRepository.leerEmpresas();
+  const [rows] = await pool.query<RowDataPacket[]>("SELECT * FROM empresas");
+  return rows as empresa[];
 }
 
-
 export async function obtenerEmpresasActivas(): Promise<empresa[]> {
-  const empresas = await empresaRepository.leerEmpresas();
-  return empresas.filter((e) => e.estado === "activa");
+  const [rows] = await pool.query<RowDataPacket[]>(
+    "SELECT * FROM empresas WHERE estado = 'activa'"
+  );
+  return rows as empresa[];
 }
 
 export async function crearEmpresa(datos: Omit<empresa, "id" | "estado">): Promise<empresa> {
@@ -17,40 +19,81 @@ export async function crearEmpresa(datos: Omit<empresa, "id" | "estado">): Promi
     throw new Error("nombre, nit y licencia de operacion son obligatorios");
   }
 
-  const nitRepetido = await empresaRepository.buscarPorNit(datos.nit);
-  if (nitRepetido) {
+  const [nitRepetido] = await pool.query<RowDataPacket[]>(
+    "SELECT * FROM empresas WHERE nit = ?",
+    [datos.nit]
+  );
+  if (nitRepetido.length > 0) {
     throw new Error("ya existe una empresa registrada con ese nit");
   }
 
-  return empresaRepository.agregarEmpresa(datos);
-}
+  const [resultado] = await pool.query<ResultSetHeader>(
+    "INSERT INTO empresas (nombre, nit, licenciaOperacion, direccion, telefono, email, estado) VALUES (?, ?, ?, ?, ?, ?, 'activa')",
+    [
+      datos.nombre,
+      datos.nit,
+      datos.licenciaOperacion,
+      (datos as any).direccion || null,
+      (datos as any).telefono || null,
+      (datos as any).email || null,
+    ]
+  );
 
+  const nuevaEmpresa: empresa = {
+    id: resultado.insertId.toString(),
+    estado: "activa" as empresa["estado"],
+    ...datos,
+  };
+
+  return nuevaEmpresa;
+}
 
 export async function obtenerEmpresaPorId(id: string): Promise<empresa> {
   if (!id) throw new Error("debes indicar un id");
 
-  const encontrada = await empresaRepository.buscarPorId(id);
-  if (!encontrada) throw new Error(`no se encontro una empresa con el id "${id}"`);
+  const [rows] = await pool.query<RowDataPacket[]>(
+    "SELECT * FROM empresas WHERE id = ?",
+    [id]
+  );
+  if (rows.length === 0) throw new Error(`no se encontro una empresa con el id "${id}"`);
 
-  return encontrada;
+  return rows[0] as empresa;
 }
-
 
 export async function actualizarDatosEmpresa(id: string, datos: Partial<empresa>): Promise<void> {
-  await obtenerEmpresaPorId(id); // valida que exista, si no existe lanza error
+  await obtenerEmpresaPorId(id);
 
-  const actualizo = await empresaRepository.actualizarEmpresa(id, datos);
-  if (!actualizo) throw new Error("no se pudo actualizar la empresa");
+  const campos: string[] = [];
+  const valores: any[] = [];
+
+  Object.entries(datos).forEach(([llave, valor]) => {
+    if (valor !== undefined) {
+      campos.push(`${llave} = ?`);
+      valores.push(valor);
+    }
+  });
+
+  if (campos.length === 0) return;
+
+  valores.push(id);
+  const [resultado] = await pool.query<ResultSetHeader>(
+    `UPDATE empresas SET ${campos.join(", ")} WHERE id = ?`,
+    valores
+  );
+
+  if (resultado.affectedRows === 0) throw new Error("no se pudo actualizar la empresa");
 }
 
-
 export async function desactivarEmpresa(id: string): Promise<void> {
-  await actualizarDatosEmpresa(id, { estado: "inactiva" });
+  await actualizarDatosEmpresa(id, { estado: "inactiva" as empresa["estado"] });
 }
 
 export async function eliminarEmpresaDefinitivo(id: string): Promise<void> {
-  await obtenerEmpresaPorId(id); // valida que exista
+  await obtenerEmpresaPorId(id);
 
-  const elimino = await empresaRepository.eliminarEmpresa(id);
-  if (!elimino) throw new Error("no se pudo eliminar la empresa");
+  const [resultado] = await pool.query<ResultSetHeader>(
+    "DELETE FROM empresas WHERE id = ?",
+    [id]
+  );
+  if (resultado.affectedRows === 0) throw new Error("no se pudo eliminar la empresa");
 }

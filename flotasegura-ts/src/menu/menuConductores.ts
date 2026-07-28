@@ -14,7 +14,7 @@ function mostrarOpciones(): void {
 }
 
 function mostrarConductor(c: conductor): void {
-  console.log(`id: ${c.id} | ${c.nombreCompleto} | licencia: ${c.licenciaNumero} (${c.licenciaTipo}) | estado: ${c.estado}`);
+  console.log(`id: ${c.id} | ${c.nombreCompleto} | licencia: ${c.licenciaNumero} | estado: ${c.estado}`);
   console.log(`   empresa: ${c.empresaId} | horas manejo hoy: ${c.horasManejoHoy} | horas descanso: ${c.horasDescansoAcumuladas}`);
 }
 
@@ -33,7 +33,6 @@ export async function menuConductores(): Promise<void> {
           conductores.forEach(mostrarConductor);
           break;
         }
-
         case "2": {
           const id = await preguntar("id del conductor: ");
           const encontrado = await conductorService.obtenerConductorPorId(id);
@@ -45,13 +44,12 @@ export async function menuConductores(): Promise<void> {
         case "3": {
           const empresaId = await preguntar("id de la empresa a la que pertenece: ");
           const nombreCompleto = await preguntar("nombre completo: ");
-          const licenciaTipo = await preguntar("tipo de licencia (a, b, c, e): ");
+          const tipoLicencia = await preguntar("tipo de licencia (a, b, c, e): ");
           const licenciaNumero = await preguntar("numero de licencia: ");
-          const licenciaVencimiento = await preguntar("vencimiento de licencia (aaaa-mm-dd): ");
           const telefono = await preguntar("telefono: ");
 
           const nuevo = await conductorService.crearConductor({
-            empresaId, nombreCompleto, licenciaTipo, licenciaNumero, licenciaVencimiento, telefono,
+            empresaId, nombreCompleto, tipoLicencia, licenciaNumero, telefono,
           });
           console.log("\nconductor registrado con exito:");
           mostrarConductor(nuevo);

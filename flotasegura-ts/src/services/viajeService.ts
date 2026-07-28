@@ -1,21 +1,26 @@
+import { RowDataPacket, ResultSetHeader } from "mysql2";
+import pool from "../config/db";
 import { viaje } from "../models/viaje";
-import * as viajeRepository from "../data/viajeRepository";
 import * as conductorService from "./conductorService";
 import * as vehiculoService from "./vehiculoService";
 import * as rutaService from "./rutaService";
 import * as cargaService from "./cargaService";
 
 export async function obtenerViajes(): Promise<viaje[]> {
-  return viajeRepository.leerViajes();
+  const [rows] = await pool.query<RowDataPacket[]>("SELECT * FROM viajes");
+  return rows as viaje[];
 }
 
 export async function obtenerViajePorId(id: string): Promise<viaje> {
   if (!id) throw new Error("debes indicar un id");
 
-  const encontrado = await viajeRepository.buscarPorId(id);
-  if (!encontrado) throw new Error(`no se encontro un viaje con el id "${id}"`);
+  const [rows] = await pool.query<RowDataPacket[]>(
+    "SELECT * FROM viajes WHERE id = ?",
+    [id]
+  );
+  if (rows.length === 0) throw new Error(`no se encontro un viaje con el id "${id}"`);
 
-  return encontrado;
+  return rows[0] as viaje;
 }
 
 export async function crearViaje(
@@ -32,23 +37,41 @@ export async function crearViaje(
     await cargaService.obtenerCargaPorId(datos.cargaId);
   }
 
-  return viajeRepository.agregarViaje(datos);
+  const [resultado] = await pool.query<ResultSetHeader>(
+    "INSERT INTO viajes (conductorId, vehiculoId, rutaId, inicioProgramado, cargaId, estado) VALUES (?, ?, ?, ?, ?, 'pendiente')",
+    [datos.conductorId, datos.vehiculoId, datos.rutaId, datos.inicioProgramado, datos.cargaId || null]
+  );
+
+  const nuevoViaje: viaje = {
+    id: resultado.insertId.toString(),
+    estado: "pendiente" as viaje["estado"],
+    inicioReal: null,
+    finReal: null,
+    notasClaude: "",
+    ...datos,
+  };
+
+  return nuevoViaje;
 }
 
 export async function cambiarEstadoViaje(id: string, nuevoEstado: viaje["estado"]): Promise<void> {
   await obtenerViajePorId(id);
 
-  const datos: Partial<viaje> = { estado: nuevoEstado };
-  if (nuevoEstado === "en_curso") datos.inicioReal = new Date().toISOString();
-  if (nuevoEstado === "completado" || nuevoEstado === "cancelado") datos.finReal = new Date().toISOString();
+  let inicioReal: string | null = null;
+  let finReal: string | null = null;
 
-  const actualizo = await viajeRepository.actualizarViaje(id, datos);
-  if (!actualizo) throw new Error("no se pudo actualizar el viaje");
+  if (nuevoEstado === "en_curso") inicioReal = new Date().toISOString();
+  if (nuevoEstado === "completado" || nuevoEstado === "cancelado") finReal = new Date().toISOString();
+
+  await pool.query(
+    "UPDATE viajes SET estado = ?, inicioReal = COALESCE(?, inicioReal), finReal = COALESCE(?, finReal) WHERE id = ?",
+    [nuevoEstado, inicioReal, finReal, id]
+  );
 }
 
 export async function eliminarViaje(id: string): Promise<void> {
   await obtenerViajePorId(id);
 
-  const elimino = await viajeRepository.eliminarViaje(id);
-  if (!elimino) throw new Error("no se pudo eliminar el viaje");
+  const [resultado] = await pool.query<ResultSetHeader>("DELETE FROM viajes WHERE id = ?", [id]);
+  if (resultado.affectedRows === 0) throw new Error("no se pudo eliminar el viaje");
 }

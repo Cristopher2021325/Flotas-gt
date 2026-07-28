@@ -23,7 +23,6 @@ function mostrarOpciones(): void {
   console.log("0. salir del programa");
 }
 
-// menu principal: siempre regresa aqui despues de salir de un submenu
 export async function iniciarMenu(): Promise<void> {
   let continuar = true;
 
@@ -54,8 +53,6 @@ export async function iniciarMenu(): Promise<void> {
         }
       }
     } catch (error) {
-      // por si algo truena inesperadamente dentro de un submenu,
-      // el programa no se cierra, solo avisa y regresa al menu principal
       const mensaje = error instanceof Error ? error.message : "ocurrio un error inesperado";
       console.log(`\nerror: ${mensaje}`);
     }
